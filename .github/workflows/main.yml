@@ -5,8 +5,8 @@ on:
       - main
 
 env:
-  BUCKET_NAME : ${{ secrets.S3_BUCKET }}
-  AWS_REGION : ${{ secrets.S3_BUCKET_REGION }}
+  BUCKET_NAME : ${{ vars.S3_BUCKET }}
+  AWS_REGION : ${{ vars.S3_BUCKET_REGION }}
 
 permissions:
   id-token: write # This is required for requesting the JWT
@@ -21,7 +21,7 @@ jobs:
       - name: Set AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ secrets.AWS_GH_OIDC_ROLE }}
+          role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Sync files to the S3
