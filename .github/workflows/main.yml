@@ -5,7 +5,7 @@ on:
       - main
 
 env:
-  BUCKET_NAME : ${{ vars.S3_BUCKET }}
+  S3_BUCKET : ${{ vars.S3_BUCKET }}
   AWS_REGION : ${{ vars.S3_BUCKET_REGION }}
 
 permissions:
@@ -26,4 +26,4 @@ jobs:
 
       - name: Sync files to the S3
         run: |
-          aws s3 sync --exclude ".git*" --delete . s3://${{ secrets.S3_BUCKET }}
+          aws s3 sync --exclude ".git*" --delete . s3://${{ env.S3_BUCKET }}
