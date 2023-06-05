@@ -19,9 +19,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_GH_OIDC_ROLE }}
-          role-session-name: rolesession
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Sync files to the S3
         run: |
-          aws s3 sync --exclude ".git/*" --delete . s3://${{ secrets.S3_BUCKET }}
+          aws s3 sync --exclude ".git*" --delete . s3://${{ secrets.S3_BUCKET }}
