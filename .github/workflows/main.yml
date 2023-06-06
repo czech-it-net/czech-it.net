@@ -4,10 +4,6 @@ on:
     branches:
       - main
 
-env:
-  S3_BUCKET : ${{ vars.S3_BUCKET }}
-  AWS_REGION : ${{ vars.S3_BUCKET_REGION }}
-
 permissions:
   id-token: write # This is required for requesting the JWT
   contents: read  # This is required for actions/checkout
@@ -23,12 +19,14 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ vars.AWS_S3_BUCKET_REGION }}
 
       - name: Sync files to the S3
         run: |
-          aws s3 sync --exclude ".git*" --delete . s3://${{ env.S3_BUCKET }}
+          aws s3 sync --delete src s3://${{ vars.AWS_S3_BUCKET }}
 
       - name: Invalidate CloudFront distribution
-        run: |
-          aws cloudfront create-invalidation --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/"
+        run: >
+          aws cloudfront create-invalidation
+          --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          --paths "/"
