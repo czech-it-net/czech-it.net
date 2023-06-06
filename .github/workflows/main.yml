@@ -36,8 +36,8 @@ jobs:
           --paths "/" \
           --output json | tee cf_inv.json
 
-          echo Invalidation: $(cat cf_inv.json | jq .Invalidation.Id)
+          echo Waiting for Invalidation: $(cat cf_inv.json | jq -r .Invalidation.Id)
 
           aws cloudfront wait invalidation-completed \
           --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
-          --id $(cat cf_inv.json | jq .Invalidation.Id)
+          --id $(cat cf_inv.json | jq -r .Invalidation.Id)
