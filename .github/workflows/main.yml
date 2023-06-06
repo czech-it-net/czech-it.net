@@ -28,3 +28,7 @@ jobs:
       - name: Sync files to the S3
         run: |
           aws s3 sync --exclude ".git*" --delete . s3://${{ env.S3_BUCKET }}
+
+      - name: Invalidate CloudFront distribution
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/"
