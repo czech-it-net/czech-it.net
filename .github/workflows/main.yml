@@ -30,14 +30,14 @@ jobs:
           aws s3 sync --delete src s3://${{ vars.AWS_S3_BUCKET }}
 
       - name: Invalidate CloudFront distribution cache and wait
-        run: |
-          aws cloudfront create-invalidation \
-          --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
-          --paths "/" \
+        run: >
+          aws cloudfront create-invalidation
+          --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          --paths "/"
           --output json | tee cf_inv.json
 
           echo Waiting for Invalidation: $(cat cf_inv.json | jq -r .Invalidation.Id)
 
-          aws cloudfront wait invalidation-completed \
-          --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+          aws cloudfront wait invalidation-completed
+          --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
           --id $(cat cf_inv.json | jq -r .Invalidation.Id)
