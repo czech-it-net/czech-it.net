@@ -4,6 +4,7 @@ on:
     branches:
       - main
 
+# Need to clean environment - aws config doesn't work well otherwise with assume role'
 env:
   AWS_DEFAULT_REGION: ${{ vars.AWS_S3_BUCKET_REGION }}
 
