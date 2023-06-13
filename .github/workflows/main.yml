@@ -13,9 +13,29 @@ permissions:
   contents: read  # This is required for actions/checkout
 
 jobs:
+
+  changes:
+    name: Detect file changes
+    runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'src/**'
+
   deploy:
     name: S3 Deploy
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' }}
+
     steps:
       - uses: actions/checkout@v3
 
@@ -33,7 +53,7 @@ jobs:
         run: >
           aws cloudfront create-invalidation
           --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
-          --paths "/"
+          --paths "/*"
           --output json | tee cf_inv.json
 
           echo Waiting for Invalidation: $(cat cf_inv.json | jq -r .Invalidation.Id)
