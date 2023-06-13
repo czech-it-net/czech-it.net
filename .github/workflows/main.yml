@@ -1,4 +1,4 @@
-name: S3 Deploy
+name: AWS Deploy
 on:
   push:
     branches:
@@ -31,7 +31,7 @@ jobs:
               - 'src/**'
 
   deploy:
-    name: S3 Deploy
+    name: S3 Sync / CFront cache clear
     runs-on: ubuntu-latest
     needs: changes
     if: ${{ needs.changes.outputs.src == 'true' }}
