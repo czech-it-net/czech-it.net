@@ -30,7 +30,8 @@ jobs:
     name: S3 Sync / CFront cache clear
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'stage' }}
+    if: ${{ needs.changes.outputs.src == 'true' || contains(github.event.head_commit.message, '[force sync]') }}
 
     steps:
       - uses: actions/checkout@v4
