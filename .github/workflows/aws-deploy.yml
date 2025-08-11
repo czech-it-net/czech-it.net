@@ -17,7 +17,7 @@ jobs:
       src: ${{ steps.filter.outputs.src }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -34,7 +34,7 @@ jobs:
     if: ${{ needs.changes.outputs.src == 'true' || contains(github.event.head_commit.message, '[force sync]') }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
