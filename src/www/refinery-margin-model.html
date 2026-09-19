@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refinery Barrel Economics</title>
+<style>
+:root{
+  --bg:#262624;
+  --surface-1:#30302e;
+  --surface-2:#3a3a37;
+  --text-primary:#f0efec;
+  --text-secondary:#c3c2b7;
+  --text-muted:#8f8e88;
+  --border:rgba(255,255,255,0.10);
+  --border-strong:rgba(255,255,255,0.20);
+  --border-accent:#3987e5;
+  --bg-danger:#4a1616;
+  --text-danger:#f09595;
+  --bg-success:#23430d;
+  --text-success:#a8cf72;
+  --text-warning:#fac775;
+  --radius:8px;
+  --font-sans:"Anthropic Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--text-primary);
+  font-family:var(--font-sans);
+  font-size:16px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px;margin:0 auto;padding:2rem 16px 3rem}
+h1{font-size:22px;font-weight:500;margin:0 0 4px;letter-spacing:-0.01em}
+.sub{font-size:14px;color:var(--text-secondary);margin:0 0 1.75rem}
+.controls{display:flex;gap:8px;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap}
+.lbl{font-size:13px;color:var(--text-secondary)}
+button{
+  font-family:inherit;font-size:13px;color:var(--text-primary);
+  background:transparent;border:0.5px solid var(--border-strong);
+  border-radius:var(--radius);padding:7px 13px;cursor:pointer;
+  transition:background .12s ease,border-color .12s ease;
+}
+button:hover{background:var(--surface-1)}
+button:active{transform:scale(0.98)}
+button:focus-visible{outline:2px solid var(--border-accent);outline-offset:2px}
+button.on{border-color:var(--border-accent);border-width:2px;padding:6px 12px}
+.brent{font-size:13px;color:var(--text-muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.caption{font-size:13px;color:var(--text-secondary);margin-bottom:8px}
+#matrix{display:grid;grid-template-columns:112px repeat(3,minmax(0,1fr));gap:6px;margin-bottom:1.5rem}
+.colhead{text-align:center;font-size:13px;padding-bottom:2px;line-height:1.35}
+.colhead small{display:block;font-size:11px;color:var(--text-muted)}
+.rowhead{font-size:13px;display:flex;flex-direction:column;justify-content:center;line-height:1.35}
+.rowhead small{font-size:11px;color:var(--text-muted)}
+.cellbtn{
+  border-radius:var(--radius);padding:14px 4px;font-size:19px;font-weight:500;
+  width:100%;font-variant-numeric:tabular-nums;line-height:1.2;
+}
+.cellbtn.sel{border:2px solid var(--border-accent);padding:13px 3px}
+.detail{background:var(--surface-1);border-radius:12px;padding:1rem 1.25rem}
+.dtitle{font-size:15px;font-weight:500;margin-bottom:12px}
+.bar{display:flex;height:26px;border-radius:4px;overflow:hidden;margin-bottom:10px}
+.bar span{height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:16px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.legend em{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);font-style:normal}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;border-top:0.5px solid var(--border);padding-top:14px}
+.tally .k{font-size:12px;color:var(--text-secondary)}
+.tally .v{font-size:19px;font-weight:500;font-variant-numeric:tabular-nums}
+.tally .v.net{font-size:24px}
+.warn{font-size:12px;color:var(--text-warning);margin-top:10px}
+.notes{margin-top:2rem;border-top:0.5px solid var(--border);padding-top:1.25rem;font-size:14px;color:var(--text-secondary)}
+.notes h2{font-size:16px;font-weight:500;color:var(--text-primary);margin:0 0 8px}
+.notes p{margin:0 0 10px}
+table.cracks{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0 4px;font-variant-numeric:tabular-nums}
+table.cracks th,table.cracks td{text-align:right;padding:5px 8px;border-bottom:0.5px solid var(--border)}
+table.cracks th:first-child,table.cracks td:first-child{text-align:left}
+table.cracks th{color:var(--text-muted);font-weight:400;font-size:12px}
+@media (max-width:460px){
+  #matrix{grid-template-columns:84px repeat(3,minmax(0,1fr));gap:4px}
+  .cellbtn{font-size:16px;padding:12px 2px}
+  .colhead,.rowhead{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Refinery barrel economics</h1>
+  <p class="sub">What comes out of a barrel, and what it earns — by crude grade and refinery configuration.</p>
+
+  <div class="controls">
+    <span class="lbl">Price scenario</span>
+    <button id="sc-now" type="button">Now — Sept 2026</button>
+    <button id="sc-norm" type="button">Normal — 2024-style</button>
+    <span class="brent" id="brent"></span>
+  </div>
+
+  <p class="caption">Net margin, $ per barrel — click a cell</p>
+  <div id="matrix"></div>
+
+  <div class="detail" id="detail"></div>
+
+  <div class="notes">
+    <h2>Crack spreads behind the two scenarios</h2>
+    <table class="cracks">
+      <thead><tr><th>Product</th><th>Now (Sept 2026)</th><th>Normal (2024-style)</th></tr></thead>
+      <tbody>
+        <tr><td>Jet / kero</td><td>+$110</td><td>+$22</td></tr>
+        <tr><td>Diesel / gasoil</td><td>+$100</td><td>+$23</td></tr>
+        <tr><td>Gasoline (Europe)</td><td>−$5</td><td>+$20</td></tr>
+        <tr><td>Naphtha</td><td>−$15</td><td>−$12</td></tr>
+        <tr><td>LPG</td><td>−$40</td><td>−$25</td></tr>
+        <tr><td>Fuel oil (HSFO)</td><td>−$35</td><td>−$13</td></tr>
+        <tr><td>Petcoke</td><td>−$73</td><td>−$55</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:4px">All against Brent. Crude costs in the model are delivered costs including freight, which is why the light sweet column looks punishing for Europe specifically.</p>
+    <p style="margin-top:14px">Yields are representative rather than plant-specific; real refineries blend several crudes and tune yields seasonally. Hydroskimming is distillation plus treating — whatever the crude naturally contains is what you sell. Cracking adds a vacuum unit and an FCC. Complex adds a hydrocracker and a coker, which destroy the residue almost entirely and leave petcoke as the only waste stream.</p>
+  </div>
+</div>
+
+<script>
+var CRUDES=[
+ {k:'ls',n:'Light sweet',sub:'38° API, 0.4% S'},
+ {k:'ms',n:'Medium sour',sub:'33° API, 1.8% S'},
+ {k:'hs',n:'Heavy sour',sub:'22° API, 3.3% S'}
+];
+var CFGS=[
+ {k:'skim',n:'Hydroskimming',sub:'no conversion'},
+ {k:'fcc',n:'Cracking',sub:'FCC'},
+ {k:'cplx',n:'Complex',sub:'FCC + HC + coker'}
+];
+var PRODS=[
+ {k:'lpg',n:'LPG',c:'#eda100'},
+ {k:'naph',n:'Naphtha',c:'#e87ba4'},
+ {k:'gaso',n:'Gasoline',c:'#3987e5'},
+ {k:'jet',n:'Jet / kero',c:'#1baf7a'},
+ {k:'dies',n:'Diesel / gasoil',c:'#eb6834'},
+ {k:'hsfo',n:'Fuel oil',c:'#8f8e88'},
+ {k:'coke',n:'Petcoke',c:'#b4b2a9'},
+ {k:'loss',n:'Own fuel & loss',c:'#5f5e5a'}
+];
+var Y={
+ ls:{skim:{lpg:2,naph:7,gaso:17,jet:12,dies:21,hsfo:37,coke:0,loss:4},
+     fcc:{lpg:6,naph:3,gaso:34,jet:13,dies:30,hsfo:14,coke:0,loss:6},
+     cplx:{lpg:7,naph:2,gaso:38,jet:15,dies:36,hsfo:1,coke:4,loss:7}},
+ ms:{skim:{lpg:2,naph:5,gaso:12,jet:10,dies:19,hsfo:48,coke:0,loss:4},
+     fcc:{lpg:5,naph:3,gaso:28,jet:12,dies:28,hsfo:24,coke:0,loss:6},
+     cplx:{lpg:7,naph:2,gaso:35,jet:14,dies:37,hsfo:2,coke:6,loss:7}},
+ hs:{skim:{lpg:1,naph:3,gaso:7,jet:7,dies:15,hsfo:63,coke:0,loss:4},
+     fcc:{lpg:4,naph:2,gaso:22,jet:9,dies:24,hsfo:39,coke:0,loss:6},
+     cplx:{lpg:6,naph:2,gaso:30,jet:12,dies:35,hsfo:3,coke:15,loss:9}}
+};
+var SC={
+ now:{brent:103,
+      p:{lpg:63,naph:88,gaso:98,jet:213,dies:203,hsfo:68,coke:30},
+      crude:{ls:124,ms:112,hs:96},
+      opex:{skim:5,fcc:7.5,cplx:10}},
+ norm:{brent:80,
+      p:{lpg:55,naph:68,gaso:100,jet:102,dies:103,hsfo:67,coke:25},
+      crude:{ls:81,ms:76,hs:68},
+      opex:{skim:3.5,fcc:5.5,cplx:7.5}}
+};
+var scen='now',sel={c:'ls',f:'skim'};
+
+function calc(ck,fk,s){
+  var y=Y[ck][fk],rev=0;
+  for(var i=0;i<PRODS.length;i++){
+    var p=PRODS[i];
+    if(p.k==='loss')continue;
+    rev+=(y[p.k]||0)/100*s.p[p.k];
+  }
+  var crude=s.crude[ck],opex=s.opex[fk];
+  return {rev:rev,crude:crude,opex:opex,net:rev-crude-opex};
+}
+function money(v){return (v<0?'−$':'$')+Math.abs(v).toFixed(1);}
+function cellStyle(v){
+  if(v<0)return 'background:var(--bg-danger);color:var(--text-danger);';
+  if(v<12)return 'background:var(--surface-2);color:var(--text-secondary);';
+  return 'background:var(--bg-success);color:var(--text-success);';
+}
+function render(){
+  var s=SC[scen];
+  document.getElementById('brent').textContent='Brent $'+s.brent+'/bbl';
+  document.getElementById('sc-now').className=scen==='now'?'on':'';
+  document.getElementById('sc-norm').className=scen==='norm'?'on':'';
+
+  var m=document.getElementById('matrix'),h='<div></div>';
+  CFGS.forEach(function(f){h+='<div class="colhead">'+f.n+'<small>'+f.sub+'</small></div>';});
+  CRUDES.forEach(function(c){
+    h+='<div class="rowhead">'+c.n+'<small>'+c.sub+'</small></div>';
+    CFGS.forEach(function(f){
+      var v=calc(c.k,f.k,s).net;
+      var on=(sel.c===c.k&&sel.f===f.k);
+      h+='<button type="button" class="cellbtn'+(on?' sel':'')+'" data-c="'+c.k+'" data-f="'+f.k+'" '+
+         'style="'+cellStyle(v)+(on?'':'border:0.5px solid var(--border);')+'" '+
+         'aria-label="'+c.n+', '+f.n+', net margin '+money(v)+' per barrel">'+money(v)+'</button>';
+    });
+  });
+  m.innerHTML=h;
+  var btns=m.querySelectorAll('button');
+  for(var i=0;i<btns.length;i++){
+    btns[i].onclick=function(){sel={c:this.getAttribute('data-c'),f:this.getAttribute('data-f')};render();};
+  }
+
+  var r=calc(sel.c,sel.f,s),y=Y[sel.c][sel.f];
+  var cn='',fn='';
+  CRUDES.forEach(function(x){if(x.k===sel.c)cn=x.n;});
+  CFGS.forEach(function(x){if(x.k===sel.f)fn=x.n;});
+
+  var bar='',leg='';
+  PRODS.forEach(function(p){
+    var v=y[p.k]||0;
+    if(!v)return;
+    bar+='<span style="width:'+v+'%;background:'+p.c+'" title="'+p.n+' '+v+'%"></span>';
+    var val=p.k==='loss'?'burned':('$'+s.p[p.k]);
+    leg+='<em><i style="background:'+p.c+'"></i>'+p.n+' '+v+'% · '+val+'</em>';
+  });
+
+  var warn=(sel.c==='hs'&&sel.f==='skim')?'<div class="warn">⚠ Not a real option — no outlet for that much high-sulphur fuel oil.</div>':'';
+  var rows=[['Product revenue','$'+r.rev.toFixed(1),''],
+            ['Crude cost','−$'+r.crude.toFixed(1),''],
+            ['Operating cost','−$'+r.opex.toFixed(1),''],
+            ['Net margin',money(r.net),'net']];
+  var tally='';
+  rows.forEach(function(x){
+    var col=x[2]==='net'?(r.net<0?'color:var(--text-danger)':'color:var(--text-success)'):'';
+    tally+='<div><div class="k">'+x[0]+'</div><div class="v '+x[2]+'" style="'+col+'">'+x[1]+'</div></div>';
+  });
+
+  document.getElementById('detail').innerHTML=
+    '<div class="dtitle">'+cn+' → '+fn+'</div>'+
+    '<div class="bar">'+bar+'</div>'+
+    '<div class="legend">'+leg+'</div>'+
+    '<div class="tally">'+tally+'</div>'+warn;
+}
+document.getElementById('sc-now').onclick=function(){scen='now';render();};
+document.getElementById('sc-norm').onclick=function(){scen='norm';render();};
+render();
+</script>
+</body>
+</html>
